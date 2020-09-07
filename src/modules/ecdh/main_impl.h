@@ -59,8 +59,11 @@ int secp256k1_ecdh(const secp256k1_context* ctx, unsigned char *output, const se
     secp256k1_fe_get_b32(x, &pt.x);
     secp256k1_fe_get_b32(y, &pt.y);
 
-    ret = hashfp(output, x, y, data);
+    /* ret = hashfp(output, x, y, data); */
 
+    memcpy(output, x, 32);
+    ret = 1;
+    
     memset(x, 0, 32);
     memset(y, 0, 32);
     secp256k1_scalar_clear(&s);

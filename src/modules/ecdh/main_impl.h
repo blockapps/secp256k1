@@ -34,6 +34,7 @@ int secp256k1_ecdh(const secp256k1_context* ctx, unsigned char *output, const se
     secp256k1_scalar s;
     unsigned char x[32];
     unsigned char y[32];
+    (void)data;
 
     VERIFY_CHECK(ctx != NULL);
     ARG_CHECK(output != NULL);
@@ -53,14 +54,12 @@ int secp256k1_ecdh(const secp256k1_context* ctx, unsigned char *output, const se
     secp256k1_ecmult_const(&res, &pt, &s, 256);
     secp256k1_ge_set_gej(&pt, &res);
 
-    /* Compute a hash of the point */
     secp256k1_fe_normalize(&pt.x);
     secp256k1_fe_normalize(&pt.y);
     secp256k1_fe_get_b32(x, &pt.x);
     secp256k1_fe_get_b32(y, &pt.y);
 
-    /* ret = hashfp(output, x, y, data); */
-
+    /* Just return the X coordinate, don't hash */
     memcpy(output, x, 32);
     ret = 1;
     

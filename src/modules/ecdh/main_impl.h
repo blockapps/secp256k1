@@ -23,10 +23,26 @@ static int ecdh_hash_function_sha256(unsigned char *output, const unsigned char 
     return 1;
 }
 
+static int ecdh_const_x(unsigned char *output, const unsigned char *x32, const unsigned char *y32, void *data) {
+    /* Just return the X coordinate, don't hash */
+    memcpy(output, x32, 32);
+
+    return 1;
+}
+
 const secp256k1_ecdh_hash_function secp256k1_ecdh_hash_function_sha256 = ecdh_hash_function_sha256;
 const secp256k1_ecdh_hash_function secp256k1_ecdh_hash_function_default = ecdh_hash_function_sha256;
+const secp256k1_ecdh_hash_function secp256k1_ecdh_const_x = ecdh_const_x;
 
 int secp256k1_ecdh(const secp256k1_context* ctx, unsigned char *output, const secp256k1_pubkey *point, const unsigned char *scalar, secp256k1_ecdh_hash_function hashfp, void *data) {
+    return secp256k1_ecdh_internal(ctx, output, point, scalar, hashfp, data, false);
+}
+
+int secp256k1_ecdh_hashed(const secp256k1_context* ctx, unsigned char *output, const secp256k1_pubkey *point, const unsigned char *scalar, secp256k1_ecdh_hash_function hashfp, void *data) {
+    return secp256k1_ecdh_internal(ctx, output, point, scalar, hashfp, data, true);
+}
+
+int secp256k1_ecdh_internal(const secp256k1_context* ctx, unsigned char *output, const secp256k1_pubkey *point, const unsigned char *scalar, secp256k1_ecdh_hash_function hashfp, void *data, bool should_hash) {
     int ret = 0;
     int overflow = 0;
     secp256k1_gej res;
@@ -42,7 +58,11 @@ int secp256k1_ecdh(const secp256k1_context* ctx, unsigned char *output, const se
     ARG_CHECK(scalar != NULL);
 
     if (hashfp == NULL) {
-        hashfp = secp256k1_ecdh_hash_function_default;
+        if (should_hash) {
+            hashfp = secp256k1_ecdh_hash_function_default;
+        } else {
+            hashfp = secp256k1_ecdh_const_x;
+        }
     }
 
     secp256k1_pubkey_load(ctx, &pt, point);
@@ -59,9 +79,7 @@ int secp256k1_ecdh(const secp256k1_context* ctx, unsigned char *output, const se
     secp256k1_fe_get_b32(x, &pt.x);
     secp256k1_fe_get_b32(y, &pt.y);
 
-    /* Just return the X coordinate, don't hash */
-    memcpy(output, x, 32);
-    ret = 1;
+    ret = hashfp(output, x, y, data);
     
     memset(x, 0, 32);
     memset(y, 0, 32);

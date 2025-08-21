@@ -33,6 +33,10 @@ SECP256K1_API extern const secp256k1_ecdh_hash_function secp256k1_ecdh_hash_func
  * Populates the output parameter with 32 bytes. */
 SECP256K1_API extern const secp256k1_ecdh_hash_function secp256k1_ecdh_hash_function_default;
 
+/** ECDH "hash" function which just returns the unhashed X coordinate.
+ * Populates the output parameter with 32 bytes. */
+SECP256K1_API extern const secp256k1_ecdh_hash_function secp256k1_ecdh_const_x;
+
 /** Compute an EC Diffie-Hellman secret in constant time
  *
  *  Returns: 1: exponentiation was successful
@@ -53,6 +57,25 @@ SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdh(
   const unsigned char *seckey,
   secp256k1_ecdh_hash_function hashfp,
   void *data
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
+
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdh_hashed(
+  const secp256k1_context* ctx,
+  unsigned char *output,
+  const secp256k1_pubkey *pubkey,
+  const unsigned char *seckey,
+  secp256k1_ecdh_hash_function hashfp,
+  void *data
+) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
+
+SECP256K1_API SECP256K1_WARN_UNUSED_RESULT int secp256k1_ecdh_internal(
+  const secp256k1_context* ctx,
+  unsigned char *output,
+  const secp256k1_pubkey *pubkey,
+  const unsigned char *seckey,
+  secp256k1_ecdh_hash_function hashfp,
+  void *data,
+  bool should_hash
 ) SECP256K1_ARG_NONNULL(1) SECP256K1_ARG_NONNULL(2) SECP256K1_ARG_NONNULL(3) SECP256K1_ARG_NONNULL(4);
 
 #ifdef __cplusplus
